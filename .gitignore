@@ -1,0 +1,19 @@
+.venv/
+.vscode/
+airflow/logs
+airflow/simple_auth_manager_passwords.json.generated
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Intermediate and experiment results
+data/result/*.csv
+data/result/*.pkl
+
+# Unnecessary
+*.md
+!README.md
+/data/*
+!/data/sample/

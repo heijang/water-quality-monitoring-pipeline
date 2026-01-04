@@ -1,0 +1,53 @@
+services:
+  water-quaility-pipeline:
+    build: .
+    image: water-quality-pipeline:latest
+    container_name: water-quality-pipeline-airflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow_db
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__LOGGING__REMOTE_LOGGING: "false"
+      AIRFLOW__WEBSERVER__BASE_URL: "http://localhost:8080"
+      AIRFLOW__WEBSERVER__EXPOSE_HOSTNAME: "localhost"
+      PYTHONPATH: /opt/airflow
+      # Database connection for water quality data
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: airflow
+      DB_PASSWORD: airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./data:/opt/airflow/data
+      - ./figures:/opt/airflow/figures
+      - ./tables:/opt/airflow/tables
+      - ./sql:/opt/airflow/sql
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/airflow.cfg:/opt/airflow/airflow.cfg
+      - ./airflow/simple_auth_manager_passwords.json.generated:/opt/airflow/simple_auth_manager_passwords.json.generated
+    ports:
+      - "8080:8080"
+    command: airflow standalone  
+
+  postgres:
+    image: postgres:16
+    container_name: airflow-postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - airflow-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  airflow-postgres-data:
